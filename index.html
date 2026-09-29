@@ -47,7 +47,7 @@
     <section class="hero">
       <div class="eyebrow">The opening bell is coming</div>
       <h2>FIND YOUR<br><span>OPPONENT</span></h2>
-      <p>Enter your name exactly once. Your opening-round matchup is locked globally for the tournament, so nobody can be drawn twice.</p>
+      <p>Enter your name and reveal who is waiting for you in the opening round. Once the draw is made, your fate is sealed.</p>
       <div class="slashes"></div>
     </section>
     <section class="arena">
@@ -59,7 +59,7 @@
         <label for="name">Your name</label>
         <div class="field"><input id="name" autocomplete="off" placeholder="e.g. Theo" maxlength="30"/><span>⌁</span></div>
         <button id="draw">Reveal My Match</button>
-        <div class="hint">Name matching is case-insensitive · Match is locked across all devices.</div>
+        <div class="hint">Name matching is case-insensitive · Once revealed, your matchup is final.</div>
         <div id="result" class="result" aria-live="polite"></div>
       </div>
       <div class="ropebox"></div>
@@ -82,9 +82,9 @@
   function showMatch(row){
     const existing = row.status === 'existing';
     result.className = 'result show';
-    result.innerHTML = `<div class="match-label">${existing ? 'Match already locked' : 'Your opening match'}</div>
+    result.innerHTML = `<div class="match-label">${existing ? 'YOUR FATE IS ALREADY SEALED' : 'YOUR OPENING MATCH'}</div>
       <div class="versus"><div class="fighter"><strong>${row.player}</strong><small>Challenger</small></div><div class="vs">VS</div><div class="fighter"><strong>${row.opponent}</strong><small>Opponent</small></div></div>
-      <div class="notice ${existing ? 'existing' : ''}">${existing ? 'You already have an opponent. This global matchup was locked earlier and has not changed.' : 'MATCH LOCKED GLOBALLY. No reshuffle. No reroll. See you in the ring.'}</div>`;
+      <div class="notice ${existing ? 'existing' : ''}">${existing ? 'Your opponent has already been decided.' : 'YOUR FATE IS SEALED. No reshuffle. No reroll. See you in the ring.'}</div>`;
   }
 
   async function reveal(){
@@ -96,7 +96,7 @@
     }
 
     button.disabled = true;
-    button.textContent = 'Locking Match...';
+    button.textContent = 'Choosing Opponent...';
     try{
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_or_create_match`, {
         method: 'POST',
@@ -126,7 +126,7 @@
       }
     } catch(error){
       console.error(error);
-      result.innerHTML = '<div class="notice error"><b>CONNECTION ERROR.</b><br>The global matchmaking server could not be reached. Please try again.</div>';
+      result.innerHTML = '<div class="notice error"><b>CONNECTION ERROR.</b><br>The matchmaking server could not be reached. Please try again.</div>';
     } finally {
       button.disabled = false;
       button.textContent = 'Reveal My Match';
