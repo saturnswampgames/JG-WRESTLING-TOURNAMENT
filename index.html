@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#070707" />
+  <title>JG Rumble — Tournament Draw</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+    :root{--red:#e51d2a;--red2:#8b0710;--ink:#060606;--panel:#101010;--line:#292929;--text:#f7f7f2;--muted:#a8a8a8;--gold:#f5c451}
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:#050505;color:var(--text);font-family:Inter,system-ui,sans-serif}
+    body{overflow-x:hidden;background:radial-gradient(circle at 50% 18%,rgba(229,29,42,.22),transparent 28%),linear-gradient(180deg,#0a0a0a 0,#050505 60%,#090909 100%)}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;background-image:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.025) 3px 4px)}
+    .lights{position:fixed;inset:-15vh -15vw auto;height:55vh;pointer-events:none;background:conic-gradient(from 90deg at 50% 0%,transparent 0 20deg,rgba(255,255,255,.06) 27deg,transparent 38deg,transparent 145deg,rgba(229,29,42,.11) 165deg,transparent 180deg);filter:blur(12px)}
+    .topbar{height:6px;background:linear-gradient(90deg,#7f0008,var(--red),#ff5a61,var(--red),#7f0008);box-shadow:0 0 25px rgba(229,29,42,.8)}
+    .wrap{width:min(1180px,calc(100% - 32px));margin:auto;position:relative}
+    header{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid #222}
+    .brand{display:flex;align-items:center;gap:12px}.badge{width:44px;height:44px;display:grid;place-items:center;border:2px solid #fff;transform:skew(-10deg);font-family:Anton;font-size:20px;letter-spacing:1px;background:linear-gradient(145deg,#1a1a1a,#090909);box-shadow:6px 6px 0 var(--red)}
+    .brand h1{font:400 20px Anton;margin:0;letter-spacing:1.6px}.brand small{display:block;color:#8d8d8d;font-size:10px;letter-spacing:2.6px;text-transform:uppercase;margin-top:2px}
+    .status{display:flex;gap:8px;align-items:center;color:#bbb;font-size:12px;text-transform:uppercase;letter-spacing:1.4px}.dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red)}
+    .hero{padding:74px 0 28px;text-align:center;position:relative}.eyebrow{font-size:12px;font-weight:800;letter-spacing:4px;color:#ef7c84;text-transform:uppercase}.hero h2{font:400 clamp(64px,11vw,142px)/.82 Anton;margin:17px 0 14px;letter-spacing:-2px;text-transform:uppercase;text-shadow:0 10px 34px #000}.hero h2 span{color:var(--red);-webkit-text-stroke:1px #ff5d66}.hero p{margin:0 auto;max-width:620px;color:#b6b6b6;line-height:1.7;font-size:15px}
+    .slashes{height:16px;margin:34px auto;width:min(480px,70vw);background:repeating-linear-gradient(120deg,transparent 0 12px,var(--red) 12px 18px,transparent 18px 34px);opacity:.8}
+    .arena{display:grid;grid-template-columns:1fr minmax(280px,480px) 1fr;gap:24px;align-items:center;margin:24px 0 70px}
+    .ropebox{height:250px;position:relative;opacity:.6}.ropebox:before,.ropebox:after{content:"";position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--red),#ff676e,var(--red),transparent);box-shadow:0 35px 0 rgba(229,29,42,.9),0 70px 0 rgba(229,29,42,.78);top:74px}.ropebox:after{top:auto;bottom:35px;box-shadow:none;opacity:.22}
+    .draw-card{background:linear-gradient(180deg,rgba(20,20,20,.96),rgba(8,8,8,.98));border:1px solid #303030;box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 1px rgba(255,255,255,.05);padding:30px;position:relative;clip-path:polygon(4% 0,100% 0,100% 95%,96% 100%,0 100%,0 5%)}
+    .draw-card:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--red);box-shadow:0 0 20px var(--red)}
+    .round{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:11px;color:#8b8b8b;letter-spacing:2px;text-transform:uppercase}.round b{color:#eee}.draw-card h3{font:400 36px/1 Anton;margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}.draw-card>p{color:#949494;font-size:13px;line-height:1.55;margin:0 0 24px}
+    label{display:block;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bdbdbd;margin-bottom:9px}.field{display:flex;background:#050505;border:1px solid #333;transition:.2s}.field:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,29,42,.1)}input{width:100%;border:0;outline:0;background:transparent;color:#fff;padding:17px 18px;font-size:16px;font-weight:700}input::placeholder{color:#545454}.field span{padding:17px 15px;color:var(--red);font-weight:900}
+    button{width:100%;margin-top:12px;padding:17px 20px;border:0;background:var(--red);color:white;font:400 20px Anton;letter-spacing:1.4px;text-transform:uppercase;cursor:pointer;clip-path:polygon(3% 0,100% 0,97% 100%,0 100%);transition:.2s;box-shadow:0 12px 30px rgba(229,29,42,.22)}button:hover{background:#ff2e3b;transform:translateY(-2px)}button:active{transform:translateY(0)}
+    .hint{font-size:10px;color:#666;text-align:center;margin-top:11px;letter-spacing:.7px}
+    .result{display:none;margin-top:22px;border-top:1px solid #252525;padding-top:20px}.result.show{display:block;animation:pop .45s cubic-bezier(.2,.8,.2,1)}@keyframes pop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+    .match-label{text-align:center;color:#7d7d7d;font-size:10px;letter-spacing:3px;text-transform:uppercase}.versus{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-top:14px}.fighter{text-align:center;min-width:0}.fighter strong{display:block;font:400 26px Anton;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis}.fighter small{font-size:9px;color:#707070;text-transform:uppercase;letter-spacing:1.5px}.vs{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#111;font:400 22px Anton;box-shadow:0 0 0 5px #181818,0 0 25px rgba(255,255,255,.14)}
+    .notice{margin-top:15px;padding:12px 14px;border:1px solid #333;background:#0c0c0c;font-size:11px;color:#aaa;line-height:1.5}.notice.existing{border-color:#725e24;color:#e8d18c;background:#151207}.notice.error{border-color:#6d171d;color:#ff969d;background:#170709}
+    .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 auto 76px}.rule{border-top:2px solid #292929;padding:18px 4px}.rule span{font:400 34px Anton;color:#313131;float:left;margin-right:12px;line-height:1}.rule h4{font:400 16px Anton;margin:0 0 5px;text-transform:uppercase;letter-spacing:.6px}.rule p{font-size:11px;line-height:1.5;color:#717171;margin:0}
+    footer{border-top:1px solid #1c1c1c;padding:24px 0 34px;color:#555;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;text-align:center}
+    @media(max-width:760px){.arena{grid-template-columns:1fr}.ropebox{display:none}.hero{padding-top:55px}.hero h2{font-size:74px}.draw-card{padding:24px}.rules{grid-template-columns:1fr}.status{display:none}.brand h1{font-size:18px}.versus{gap:8px}.fighter strong{font-size:21px}}
+  </style>
+</head>
+<body>
+<div class="topbar"></div><div class="lights"></div>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="badge">JG</div><div><h1>JUMPINGGOOSE RUMBLE</h1><small>Tournament Draw</small></div></div>
+    <div class="status"><span class="dot"></span> Matchmaking Live</div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">The opening bell is coming</div>
+      <h2>FIND YOUR<br><span>OPPONENT</span></h2>
+      <p>Enter your name exactly once. Your opening-round matchup is locked for the tournament, so nobody can be drawn twice.</p>
+      <div class="slashes"></div>
+    </section>
+    <section class="arena">
+      <div class="ropebox"></div>
+      <div class="draw-card">
+        <div class="round"><b>Round 01</b><span>7 Matches · 14 Fighters</span></div>
+        <h3>Step Into The Ring</h3>
+        <p>Type your name to reveal the person standing across the ring from you.</p>
+        <label for="name">Your name</label>
+        <div class="field"><input id="name" autocomplete="off" placeholder="e.g. Theo" maxlength="30"/><span>⌁</span></div>
+        <button id="draw">Reveal My Match</button>
+        <div class="hint">Name matching is case-insensitive.</div>
+        <div id="result" class="result" aria-live="polite"></div>
+      </div>
+      <div class="ropebox"></div>
+    </section>
+    <section class="rules">
+      <div class="rule"><span>01</span><h4>One locked match</h4><p>Every participant belongs to one opening-round matchup.</p></div>
+      <div class="rule"><span>02</span><h4>No repeats</h4><p>No participant can appear in more than one pairing.</p></div>
+      <div class="rule"><span>03</span><h4>Already picked?</h4><p>If someone already drew you, entering your name reveals that same opponent.</p></div>
+    </section>
+  </main>
+  <footer>Jumpinggoose Game Night · Tournament Selection System</footer>
+</div>
+<script>
+  const PAIRS = [['Nandini','Siraj'],['Theo','Apeksha'],['Iksha','Vedant'],['Midhun','Kritika'],['Supriya','Aadil'],['Manvith','Deep'],['Pranjal','Anas']];
+  const canonical = new Map();
+  PAIRS.flat().forEach(n=>canonical.set(n.toLowerCase(),n));
+  const opponent = new Map();
+  PAIRS.forEach(([a,b])=>{opponent.set(a.toLowerCase(),b);opponent.set(b.toLowerCase(),a)});
+  const claimed = JSON.parse(localStorage.getItem('jg-rumble-claimed') || '{}');
+  const input = document.getElementById('name');
+  const result = document.getElementById('result');
+  function reveal(){
+    const key=input.value.trim().toLowerCase();
+    result.className='result show';
+    if(!canonical.has(key)){
+      result.innerHTML='<div class="notice error"><b>NAME NOT FOUND.</b><br>Check the spelling and try the name from the official tournament list.</div>';
+      return;
+    }
+    const you=canonical.get(key), opp=opponent.get(key);
+    const already=claimed[key] || claimed[opp.toLowerCase()];
+    claimed[key]=opp; claimed[opp.toLowerCase()]=you;
+    localStorage.setItem('jg-rumble-claimed',JSON.stringify(claimed));
+    result.innerHTML=`<div class="match-label">${already?'Match already locked':'Your opening match'}</div><div class="versus"><div class="fighter"><strong>${you}</strong><small>Challenger</small></div><div class="vs">VS</div><div class="fighter"><strong>${opp}</strong><small>Opponent</small></div></div><div class="notice ${already?'existing':''}">${already?'You already have an opponent. This matchup was locked earlier and has not changed.':'MATCH LOCKED. No reshuffle. No reroll. See you in the ring.'}</div>`;
+  }
+  document.getElementById('draw').addEventListener('click',reveal);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')reveal()});
+</script>
+</body>
+</html>
