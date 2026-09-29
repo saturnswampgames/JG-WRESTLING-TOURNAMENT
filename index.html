@@ -26,7 +26,7 @@
     .draw-card:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--red);box-shadow:0 0 20px var(--red)}
     .round{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;font-size:11px;color:#8b8b8b;letter-spacing:2px;text-transform:uppercase}.round b{color:#eee}.draw-card h3{font:400 36px/1 Anton;margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}.draw-card>p{color:#949494;font-size:13px;line-height:1.55;margin:0 0 24px}
     label{display:block;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bdbdbd;margin-bottom:9px}.field{display:flex;background:#050505;border:1px solid #333;transition:.2s}.field:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,29,42,.1)}input{width:100%;border:0;outline:0;background:transparent;color:#fff;padding:17px 18px;font-size:16px;font-weight:700}input::placeholder{color:#545454}.field span{padding:17px 15px;color:var(--red);font-weight:900}
-    button{width:100%;margin-top:12px;padding:17px 20px;border:0;background:var(--red);color:white;font:400 20px Anton;letter-spacing:1.4px;text-transform:uppercase;cursor:pointer;clip-path:polygon(3% 0,100% 0,97% 100%,0 100%);transition:.2s;box-shadow:0 12px 30px rgba(229,29,42,.22)}button:hover{background:#ff2e3b;transform:translateY(-2px)}button:active{transform:translateY(0)}
+    button{width:100%;margin-top:12px;padding:17px 20px;border:0;background:var(--red);color:white;font:400 20px Anton;letter-spacing:1.4px;text-transform:uppercase;cursor:pointer;clip-path:polygon(3% 0,100% 0,97% 100%,0 100%);transition:.2s;box-shadow:0 12px 30px rgba(229,29,42,.22)}button:hover{background:#ff2e3b;transform:translateY(-2px)}button:active{transform:translateY(0)}button:disabled{opacity:.65;cursor:wait;transform:none}
     .hint{font-size:10px;color:#666;text-align:center;margin-top:11px;letter-spacing:.7px}
     .result{display:none;margin-top:22px;border-top:1px solid #252525;padding-top:20px}.result.show{display:block;animation:pop .45s cubic-bezier(.2,.8,.2,1)}@keyframes pop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
     .match-label{text-align:center;color:#7d7d7d;font-size:10px;letter-spacing:3px;text-transform:uppercase}.versus{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-top:14px}.fighter{text-align:center;min-width:0}.fighter strong{display:block;font:400 26px Anton;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis}.fighter small{font-size:9px;color:#707070;text-transform:uppercase;letter-spacing:1.5px}.vs{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#111;font:400 22px Anton;box-shadow:0 0 0 5px #181818,0 0 25px rgba(255,255,255,.14)}
@@ -47,7 +47,7 @@
     <section class="hero">
       <div class="eyebrow">The opening bell is coming</div>
       <h2>FIND YOUR<br><span>OPPONENT</span></h2>
-      <p>Enter your name exactly once. Your opening-round matchup is locked for the tournament, so nobody can be drawn twice.</p>
+      <p>Enter your name exactly once. Your opening-round matchup is locked globally for the tournament, so nobody can be drawn twice.</p>
       <div class="slashes"></div>
     </section>
     <section class="arena">
@@ -59,7 +59,7 @@
         <label for="name">Your name</label>
         <div class="field"><input id="name" autocomplete="off" placeholder="e.g. Theo" maxlength="30"/><span>⌁</span></div>
         <button id="draw">Reveal My Match</button>
-        <div class="hint">Name matching is case-insensitive.</div>
+        <div class="hint">Name matching is case-insensitive · Match is locked across all devices.</div>
         <div id="result" class="result" aria-live="polite"></div>
       </div>
       <div class="ropebox"></div>
@@ -73,29 +73,68 @@
   <footer>Jumpinggoose Game Night · Tournament Selection System</footer>
 </div>
 <script>
-  const PAIRS = [['Nandini','Siraj'],['Theo','Apeksha'],['Iksha','Vedant'],['Midhun','Kritika'],['Supriya','Aadil'],['Manvith','Deep'],['Pranjal','Anas']];
-  const canonical = new Map();
-  PAIRS.flat().forEach(n=>canonical.set(n.toLowerCase(),n));
-  const opponent = new Map();
-  PAIRS.forEach(([a,b])=>{opponent.set(a.toLowerCase(),b);opponent.set(b.toLowerCase(),a)});
-  const claimed = JSON.parse(localStorage.getItem('jg-rumble-claimed') || '{}');
+  const SUPABASE_URL = 'https://bckdazhljpmtudfegzvk.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_tdJtLLlhRPG4JlgyAYdpiw_xKiZUWVl';
   const input = document.getElementById('name');
   const result = document.getElementById('result');
-  function reveal(){
-    const key=input.value.trim().toLowerCase();
-    result.className='result show';
-    if(!canonical.has(key)){
-      result.innerHTML='<div class="notice error"><b>NAME NOT FOUND.</b><br>Check the spelling and try the name from the official tournament list.</div>';
+  const button = document.getElementById('draw');
+
+  function showMatch(row){
+    const existing = row.status === 'existing';
+    result.className = 'result show';
+    result.innerHTML = `<div class="match-label">${existing ? 'Match already locked' : 'Your opening match'}</div>
+      <div class="versus"><div class="fighter"><strong>${row.player}</strong><small>Challenger</small></div><div class="vs">VS</div><div class="fighter"><strong>${row.opponent}</strong><small>Opponent</small></div></div>
+      <div class="notice ${existing ? 'existing' : ''}">${existing ? 'You already have an opponent. This global matchup was locked earlier and has not changed.' : 'MATCH LOCKED GLOBALLY. No reshuffle. No reroll. See you in the ring.'}</div>`;
+  }
+
+  async function reveal(){
+    const name = input.value.trim();
+    result.className = 'result show';
+    if(!name){
+      result.innerHTML = '<div class="notice error"><b>ENTER YOUR NAME.</b><br>Type your tournament name before revealing your match.</div>';
       return;
     }
-    const you=canonical.get(key), opp=opponent.get(key);
-    const already=claimed[key] || claimed[opp.toLowerCase()];
-    claimed[key]=opp; claimed[opp.toLowerCase()]=you;
-    localStorage.setItem('jg-rumble-claimed',JSON.stringify(claimed));
-    result.innerHTML=`<div class="match-label">${already?'Match already locked':'Your opening match'}</div><div class="versus"><div class="fighter"><strong>${you}</strong><small>Challenger</small></div><div class="vs">VS</div><div class="fighter"><strong>${opp}</strong><small>Opponent</small></div></div><div class="notice ${already?'existing':''}">${already?'You already have an opponent. This matchup was locked earlier and has not changed.':'MATCH LOCKED. No reshuffle. No reroll. See you in the ring.'}</div>`;
+
+    button.disabled = true;
+    button.textContent = 'Locking Match...';
+    try{
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_or_create_match`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_name: name })
+      });
+
+      if(!response.ok){
+        const message = await response.text();
+        throw new Error(message || `Request failed (${response.status})`);
+      }
+
+      const payload = await response.json();
+      const row = Array.isArray(payload) ? payload[0] : payload;
+
+      if(!row || row.status === 'not_found'){
+        result.innerHTML = '<div class="notice error"><b>NAME NOT FOUND.</b><br>Check the spelling and use your name from the official tournament list.</div>';
+      } else if(row.status === 'unavailable'){
+        result.innerHTML = '<div class="notice error"><b>NO OPPONENT AVAILABLE.</b><br>Please contact the tournament host.</div>';
+      } else if(row.opponent){
+        showMatch(row);
+      } else {
+        throw new Error('Unexpected matchmaking response.');
+      }
+    } catch(error){
+      console.error(error);
+      result.innerHTML = '<div class="notice error"><b>CONNECTION ERROR.</b><br>The global matchmaking server could not be reached. Please try again.</div>';
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Reveal My Match';
+    }
   }
-  document.getElementById('draw').addEventListener('click',reveal);
-  input.addEventListener('keydown',e=>{if(e.key==='Enter')reveal()});
+
+  button.addEventListener('click', reveal);
+  input.addEventListener('keydown', e => { if(e.key === 'Enter' && !button.disabled) reveal(); });
 </script>
 </body>
 </html>
